@@ -1,0 +1,5 @@
+ <library path="lib/libbfs_planner">
+  <class name="bfs_planner/BFSPlanner" type="bfs_planner::BFSPlanner" base_class_type="nav_core::BaseGlobalPlanner">
+    <description>This is a bfs planner plugin by Mayavan.</description>
+  </class>
+ </library>

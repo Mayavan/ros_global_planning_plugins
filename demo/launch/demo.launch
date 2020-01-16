@@ -1,12 +1,17 @@
 <launch>
   <!-- Gazebo Simulation -->  
   <!-- Arguments -->
-  <arg name="map_file" default="$(find ros_global_planning_plugin)/maps/map.yaml"/>
+  <arg name="map_file" default="$(find demo)/maps/map.yaml"/>
   <arg name="open_rviz" default="true"/>
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
   <arg name="x_pos" default="-2.0"/>
   <arg name="y_pos" default="-0.5"/>
   <arg name="z_pos" default="0.0"/>
+  <arg name="global_planner" default="bfs_planner/BFSPlanner"/>
+
+  <!-- Arguments for move_base-->
+  <arg name="cmd_vel_topic" default="/cmd_vel" />
+  <arg name="odom_topic" default="odom" />
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_world.world"/>
@@ -34,9 +39,18 @@
   <include file="$(find turtlebot3_navigation)/launch/amcl.launch"/>
 
   <!-- move_base -->
-  <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
-    <arg name="model" value="$(arg model)" />
-  </include>
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <param name="base_global_planner" value="$(arg global_planner)"/>
+    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+    <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
+    <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+  </node>
 
   <!-- rviz -->
   <group if="$(arg open_rviz)"> 
@@ -45,5 +59,5 @@
   </group>
 
   <node pkg="rosbag" type="play" name="initialpose_player"
-    args="$(find ros_global_planning_plugin)/rosbag/initialpose.bag"/>
+    args="$(find demo)/rosbag/initialpose.bag"/>
 </launch>
